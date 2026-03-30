@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | Reconman{% endblock %}
+{% block page_title %}Operational Settings{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">Global Safety Controls</div>
+  <div class="card-body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-12">
+          {{ form.allowed_ranges.label(class="form-label") }}
+          {{ form.allowed_ranges(class="form-control font-monospace", rows="6", placeholder="10.0.0.0/8,172.16.0.0/12,192.168.0.0/16") }}
+          <div class="form-text">Only targets that remain fully within these ranges can be scanned.</div>
+        </div>
+        <div class="col-md-3">
+          {{ form.default_batch_size.label(class="form-label") }}
+          {{ form.default_batch_size(class="form-control") }}
+        </div>
+        <div class="col-md-3">
+          {{ form.max_concurrency.label(class="form-label") }}
+          {{ form.max_concurrency(class="form-control") }}
+        </div>
+        <div class="col-md-3">
+          {{ form.default_host_timeout.label(class="form-label") }}
+          {{ form.default_host_timeout(class="form-control") }}
+        </div>
+        <div class="col-md-3">
+          {{ form.default_retry_count.label(class="form-label") }}
+          {{ form.default_retry_count(class="form-control") }}
+        </div>
+      </div>
+      <div class="mt-4">
+        {{ form.submit(class="btn btn-primary") }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

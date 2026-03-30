@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Queue | Reconman{% endblock %}
+{% block page_title %}Scan Queue{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">Batch Queue</div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Name</th>
+          <th>Profile</th>
+          <th>Status</th>
+          <th>Targets</th>
+          <th>Progress</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>#{{ job.id }}</td>
+          <td>{{ job.name }}</td>
+          <td>{{ job.profile_label }}</td>
+          <td><span class="badge text-bg-secondary">{{ job.status }}</span></td>
+          <td>{{ job.total_targets }}</td>
+          <td class="w-25">
+            <div class="progress">
+              <div class="progress-bar" style="width: {{ job.progress_percent }}%">{{ job.progress_percent }}%</div>
+            </div>
+          </td>
+          <td>{{ job.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td><a class="btn btn-sm btn-outline-light" href="{{ url_for('scans.job_details', batch_job_id=job.id) }}">Open</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-secondary">No queued or historical jobs found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

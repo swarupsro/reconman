@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Job #{{ batch.id }} | Reconman{% endblock %}
+{% block page_title %}Job #{{ batch.id }}: {{ batch.name }}{% endblock %}
+
+{% block content %}
+<section class="job-summary mb-4">
+  <div class="row g-4">
+    <div class="col-12 col-xl-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+            <div>
+              <div class="eyebrow">Profile</div>
+              <h4 class="mb-1">{{ batch.profile_label }}</h4>
+              <div class="text-secondary">{{ batch.total_targets }} total targets • batch size {{ batch.batch_size }}</div>
+            </div>
+            <div class="text-end">
+              <span class="badge text-bg-secondary fs-6" id="batch-status">{{ batch.status }}</span>
+              <div class="small text-secondary mt-2">Created by {{ batch.created_by_user.username }}</div>
+            </div>
+          </div>
+          <div class="progress progress-lg mb-3">
+            <div class="progress-bar" id="batch-progress-bar" style="width: {{ batch.progress_percent }}%">{{ batch.progress_percent }}%</div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-3"><div class="mini-stat"><span>Completed</span><strong id="batch-completed">{{ batch.completed_targets }}</strong></div></div>
+            <div class="col-md-3"><div class="mini-stat"><span>Failed</span><strong id="batch-failed">{{ batch.failed_targets }}</strong></div></div>
+            <div class="col-md-3"><div class="mini-stat"><span>Running</span><strong id="batch-running">{{ batch.running_targets }}</strong></div></div>
+            <div class="col-md-3"><div class="mini-stat"><span>Timeout</span><strong>{{ batch.host_timeout }}s</strong></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-4">
+      <div class="card h-100">
+        <div class="card-body d-grid gap-2">
+          <form method="post" action="{{ url_for('scans.pause_batch', batch_job_id=batch.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-warning w-100" type="submit">Pause Batch</button>
+          </form>
+          <form method="post" action="{{ url_for('scans.resume_batch', batch_job_id=batch.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-success w-100" type="submit">Resume Batch</button>
+          </form>
+          <form method="post" action="{{ url_for('scans.stop_batch', batch_job_id=batch.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-danger w-100" type="submit">Stop Batch</button>
+          </form>
+          <a class="btn btn-outline-light w-100" href="{{ url_for('scans.export_batch_csv', batch_job_id=batch.id) }}">Export CSV</a>
+          <a class="btn btn-outline-light w-100" href="{{ url_for('scans.export_batch_json', batch_job_id=batch.id) }}">Export JSON</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Host Results</span>
+    <span class="text-secondary small">Live updates enabled</span>
+  </div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover align-middle" id="results-table" data-batch-id="{{ batch.id }}">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Target IP / Host</th>
+          <th>Scan Profile</th>
+          <th>Status</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Host Up/Down</th>
+          <th>Open Ports Count</th>
+          <th>Open Ports</th>
+          <th>Services</th>
+          <th>OS Detection</th>
+          <th>Duration</th>
+          <th>Raw Output</th>
+          <th>XML Output</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in targets.items %}
+        <tr id="target-row-{{ row.id }}">
+          <td>#{{ batch.id }}</td>
+          <td class="font-monospace">{{ row.target }}</td>
+          <td>{{ batch.profile_label }}</td>
+          <td data-field="status"><span class="badge text-bg-secondary">{{ row.status }}</span></td>
+          <td data-field="started_at">{{ row.started_at.strftime("%Y-%m-%d %H:%M:%S") if row.started_at else '-' }}</td>
+          <td data-field="finished_at">{{ row.finished_at.strftime("%Y-%m-%d %H:%M:%S") if row.finished_at else '-' }}</td>
+          <td data-field="host_state">{{ row.host_state or '-' }}</td>
+          <td data-field="open_ports_count">{{ row.open_ports_count }}</td>
+          <td data-field="open_ports_summary">{{ row.open_ports_summary or '-' }}</td>
+          <td data-field="services_summary">{{ row.services_summary or '-' }}</td>
+          <td data-field="os_guess">{{ row.os_guess or '-' }}</td>
+          <td data-field="duration_seconds">{{ "%.1fs"|format(row.duration_seconds) if row.duration_seconds else '-' }}</td>
+          <td><button class="btn btn-sm btn-outline-light output-button" data-output-url="{{ url_for('scans.target_output', target_result_id=row.id, output_type='raw') }}">View</button></td>
+          <td><button class="btn btn-sm btn-outline-light output-button" data-output-url="{{ url_for('scans.target_output', target_result_id=row.id, output_type='xml') }}">View</button></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="14" class="text-secondary">No targets in this batch.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<nav class="mt-4">
+  <ul class="pagination">
+    {% if targets.has_prev %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('scans.job_details', batch_job_id=batch.id, page=targets.prev_num) }}">Previous</a></li>
+    {% endif %}
+    <li class="page-item active"><span class="page-link">{{ targets.page }}</span></li>
+    {% if targets.has_next %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('scans.job_details', batch_job_id=batch.id, page=targets.next_num) }}">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.reconmanPage = { type: "job-details", batchId: {{ batch.id }} };
+</script>
+{% endblock %}

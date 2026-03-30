@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}History | Reconman{% endblock %}
+{% block page_title %}Scan History{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-header">Filters</div>
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-2"><input class="form-control" name="target" placeholder="IP / CIDR" value="{{ filters.get('target', '') }}"></div>
+      <div class="col-md-2">
+        <select class="form-select" name="host_state">
+          <option value="">Host state</option>
+          <option value="up" {% if filters.get('host_state') == 'up' %}selected{% endif %}>Up</option>
+          <option value="down" {% if filters.get('host_state') == 'down' %}selected{% endif %}>Down</option>
+        </select>
+      </div>
+      <div class="col-md-2"><input class="form-control" name="open_port" placeholder="Open port" value="{{ filters.get('open_port', '') }}"></div>
+      <div class="col-md-2"><input class="form-control" name="service" placeholder="Service" value="{{ filters.get('service', '') }}"></div>
+      <div class="col-md-2">
+        <select class="form-select" name="profile_key">
+          <option value="">Profile</option>
+          {% for key, profile in profiles.items() %}
+          <option value="{{ key }}" {% if filters.get('profile_key') == key %}selected{% endif %}>{{ profile.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" name="time_range">
+          <option value="">Time</option>
+          <option value="24h" {% if filters.get('time_range') == '24h' %}selected{% endif %}>Last 24h</option>
+          <option value="7d" {% if filters.get('time_range') == '7d' %}selected{% endif %}>Last 7 days</option>
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Apply Filters</button>
+        <a class="btn btn-outline-light" href="{{ url_for('scans.history') }}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Result History</div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Job</th>
+          <th>Target</th>
+          <th>Profile</th>
+          <th>Status</th>
+          <th>Host</th>
+          <th>Ports</th>
+          <th>Services</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in results.items %}
+        <tr>
+          <td><a href="{{ url_for('scans.job_details', batch_job_id=row.batch_job_id) }}">#{{ row.batch_job_id }}</a></td>
+          <td>{{ row.target }}</td>
+          <td>{{ row.batch_job.profile_label }}</td>
+          <td><span class="badge text-bg-secondary">{{ row.status }}</span></td>
+          <td>{{ row.host_state or '-' }}</td>
+          <td>{{ row.open_ports_summary or '-' }}</td>
+          <td>{{ row.services_summary or '-' }}</td>
+          <td>{{ row.updated_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-secondary">No results matched the selected filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<nav class="mt-4">
+  <ul class="pagination">
+    {% if results.has_prev %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('scans.history', page=results.prev_num, **filters) }}">Previous</a></li>
+    {% endif %}
+    <li class="page-item active"><span class="page-link">{{ results.page }}</span></li>
+    {% if results.has_next %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('scans.history', page=results.next_num, **filters) }}">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}

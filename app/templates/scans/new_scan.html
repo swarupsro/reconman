@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}New Scan | Reconman{% endblock %}
+{% block page_title %}Launch New Scan Batch{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-xl-7">
+    <div class="card">
+      <div class="card-header">Batch Submission</div>
+      <div class="card-body">
+        <form method="post" novalidate id="scan-form">
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form.name.label(class="form-label") }}
+              {{ form.name(class="form-control", placeholder="Q2 internal perimeter verification") }}
+            </div>
+            <div class="col-12">
+              {{ form.targets.label(class="form-label") }}
+              {{ form.targets(class="form-control font-monospace", rows="12", placeholder="10.10.10.0/24&#10;10.20.1.25&#10;10.20.2.10-10.20.2.20") }}
+              <div class="form-text">{{ form.targets.description }}</div>
+            </div>
+            <div class="col-md-6">
+              {{ form.profile_key.label(class="form-label") }}
+              {{ form.profile_key(class="form-select", id="profile-key") }}
+            </div>
+            <div class="col-md-3">
+              {{ form.batch_size.label(class="form-label") }}
+              {{ form.batch_size(class="form-control", max=max_concurrency) }}
+            </div>
+            <div class="col-md-3">
+              {{ form.host_timeout.label(class="form-label") }}
+              {{ form.host_timeout(class="form-control") }}
+            </div>
+            <div class="col-md-3">
+              {{ form.retry_failed.label(class="form-label") }}
+              {{ form.retry_failed(class="form-control") }}
+            </div>
+          </div>
+
+          <div class="custom-builder mt-4" id="custom-builder-panel">
+            <h5 class="mb-3">Custom Safe Profile Builder</h5>
+            <div class="row g-3">
+              <div class="col-md-4">
+                {{ form.custom_timing.label(class="form-label") }}
+                {{ form.custom_timing(class="form-select") }}
+              </div>
+              <div class="col-md-4">
+                {{ form.custom_top_ports.label(class="form-label") }}
+                {{ form.custom_top_ports(class="form-control", placeholder="100") }}
+              </div>
+              <div class="col-md-4 d-flex align-items-end">
+                <div class="alert alert-secondary small mb-0 w-100">No arbitrary Nmap flags are accepted. Only approved options are composed server-side.</div>
+              </div>
+              <div class="col-md-3">{{ form.custom_service_detection(class="form-check-input") }} {{ form.custom_service_detection.label(class="form-check-label ms-2") }}</div>
+              <div class="col-md-3">{{ form.custom_os_detection(class="form-check-input") }} {{ form.custom_os_detection.label(class="form-check-label ms-2") }}</div>
+              <div class="col-md-3">{{ form.custom_tcp_connect(class="form-check-input") }} {{ form.custom_tcp_connect.label(class="form-check-label ms-2") }}</div>
+              <div class="col-md-3">{{ form.custom_udp_top20(class="form-check-input") }} {{ form.custom_udp_top20.label(class="form-check-label ms-2") }}</div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-3 align-items-center">
+            {{ form.submit(class="btn btn-primary") }}
+            <span class="text-secondary small">Configured max concurrency: {{ max_concurrency }}</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-5">
+    <div class="card mb-4">
+      <div class="card-header">Approved Profiles</div>
+      <div class="card-body">
+        <div class="d-grid gap-3">
+          {% for key, profile in profiles.items() %}
+          <div class="profile-card">
+            <div class="d-flex justify-content-between">
+              <strong>{{ profile.label }}</strong>
+              <span class="badge text-bg-dark">{{ key }}</span>
+            </div>
+            <div class="small text-secondary mt-2">{{ profile.description }}</div>
+            {% if profile.args %}
+            <div class="font-monospace small mt-2">{{ profile.args | join(' ') }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Safety Controls</div>
+      <div class="card-body">
+        <ul class="mb-0 ps-3">
+          <li>Targets are validated against approved internal ranges.</li>
+          <li>Profiles are built from a whitelist, never raw command text.</li>
+          <li>Every action is written to an audit log.</li>
+          <li>Per-host timeout and concurrency limits reduce abuse risk.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.reconmanPage = { type: "new-scan" };
+</script>
+{% endblock %}

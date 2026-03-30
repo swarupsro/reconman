@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Reconman{% endblock %}
+{% block page_title %}Security Operations Dashboard{% endblock %}
+
+{% block content %}
+<section class="stats-grid mb-4" id="dashboard-stats">
+  <div class="stat-card">
+    <span>Total Jobs</span>
+    <strong data-stat="total_jobs">{{ stats.total_jobs }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Running Jobs</span>
+    <strong data-stat="running_jobs">{{ stats.running_jobs }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Completed Jobs</span>
+    <strong data-stat="completed_jobs">{{ stats.completed_jobs }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Failed Jobs</span>
+    <strong data-stat="failed_jobs">{{ stats.failed_jobs }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Total Hosts Scanned</span>
+    <strong data-stat="total_hosts_scanned">{{ stats.total_hosts_scanned }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Hosts Last 24h</span>
+    <strong data-stat="hosts_last_24h">{{ stats.hosts_last_24h }}</strong>
+  </div>
+</section>
+
+<div class="row g-4">
+  <div class="col-12 col-xl-5">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Recent Batch Jobs</span>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('scans.new_scan') }}">New Scan</a>
+      </div>
+      <div class="card-body">
+        <div class="list-group list-group-flush">
+          {% for job in recent_jobs %}
+          <a class="list-group-item list-group-item-action bg-transparent px-0" href="{{ url_for('scans.job_details', batch_job_id=job.id) }}">
+            <div class="d-flex justify-content-between">
+              <div>
+                <div class="fw-semibold">#{{ job.id }} {{ job.name }}</div>
+                <div class="small text-secondary">{{ job.profile_label }} • {{ job.total_targets }} targets</div>
+              </div>
+              <span class="badge text-bg-secondary">{{ job.status }}</span>
+            </div>
+          </a>
+          {% else %}
+          <div class="text-secondary">No jobs yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-7">
+    <div class="card h-100">
+      <div class="card-header">Recent Host Results</div>
+      <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Job</th>
+              <th>Target</th>
+              <th>Status</th>
+              <th>Host</th>
+              <th>Ports</th>
+              <th>Services</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in recent_results %}
+            <tr>
+              <td><a href="{{ url_for('scans.job_details', batch_job_id=row.batch_job_id) }}">#{{ row.batch_job_id }}</a></td>
+              <td>{{ row.target }}</td>
+              <td><span class="badge text-bg-secondary">{{ row.status }}</span></td>
+              <td>{{ row.host_state or '-' }}</td>
+              <td>{{ row.open_ports_summary or '-' }}</td>
+              <td>{{ row.services_summary or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-secondary">No host results yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
