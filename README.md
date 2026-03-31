@@ -59,12 +59,21 @@ This tool must only be used for authorized internal security assessments.
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
-copy .env.example .env
+cp .env.example .env
 ```
 
 Edit `.env` and set a strong `SECRET_KEY` and admin password.
+
+On Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
 
 ### 2. Start Redis
 
