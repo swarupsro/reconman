@@ -18,7 +18,7 @@ from app.services.scan_manager import (
 )
 
 
-app = create_app()
+app = create_app(initialize_database=False)
 
 
 def run_target_scan(batch_job_id: int, target_result_id: int) -> None:

@@ -1,19 +1,26 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from flask import Flask
 from redis import Redis
 from rq import Queue
 
-from config import config_by_name
+from config import config_by_name, sqlite_database_path
 from app.extensions import csrf, db, limiter, login_manager, migrate, socketio
 from app.models import AppSetting, User
 from app.utils.audit import audit
 
 
-def create_app(config_name: str | None = None) -> Flask:
+def create_app(config_name: str | None = None, initialize_database: bool = True) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     config_key = config_name or "default"
     app.config.from_object(config_by_name[config_key])
+    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+
+    database_path = sqlite_database_path(app.config["SQLALCHEMY_DATABASE_URI"])
+    if database_path is not None:
+        database_path.parent.mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -34,9 +41,10 @@ def create_app(config_name: str | None = None) -> Flask:
     register_shell_context(app)
     register_template_helpers(app)
 
-    with app.app_context():
-        db.create_all()
-        bootstrap_defaults(app)
+    if initialize_database:
+        with app.app_context():
+            db.create_all()
+            bootstrap_defaults(app)
 
     return app
 

@@ -4,7 +4,7 @@ from rq import Connection, Worker
 from app import create_app
 
 
-app = create_app()
+app = create_app(initialize_database=False)
 
 
 def main() -> None:
